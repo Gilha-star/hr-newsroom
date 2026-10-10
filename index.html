@@ -1,0 +1,155 @@
+<title>인사 뉴스룸</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: wire-desk log. Sticky filter bar on top, then a day-by-day ledger with a date rail on the left and article entries on the right. */
+:root{
+  --bg:#ECEFF2; --surface:#FFFFFF; --ink:#13202B; --muted:#586674; --line:#D2D9DF;
+  --accent:#0B5E73; --accent-ink:#FFFFFF; --mark:#FFE58A; --mark-ink:#3A2E00;
+  --t-law:#2F4EA8; --t-hire:#0B7A5C; --t-pay:#A5541B; --t-ai:#7A3FA0; --t-ls:#B02A3A;
+  --font-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E151B; --surface:#16202A; --ink:#E7EDF2; --muted:#92A1AE; --line:#263541;
+  --accent:#5CC6D6; --accent-ink:#06222A; --mark:#4B3F10; --mark-ink:#FFE9A0;
+  --t-law:#8FA9F2; --t-hire:#4FCBA3; --t-pay:#E5A06A; --t-ai:#C79BE6; --t-ls:#F08A97;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0E151B; --surface:#16202A; --ink:#E7EDF2; --muted:#92A1AE; --line:#263541;
+  --accent:#5CC6D6; --accent-ink:#06222A; --mark:#4B3F10; --mark-ink:#FFE9A0;
+  --t-law:#8FA9F2; --t-hire:#4FCBA3; --t-pay:#E5A06A; --t-ai:#C79BE6; --t-ls:#F08A97;
+  color-scheme:dark;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 var(--font-body);padding-inline:clamp(16px,4vw,40px)}
+.wrap{max-width:1040px;margin:0 auto;padding-block:28px 64px}
+a{color:inherit}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mast{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-bottom:18px;border-bottom:2px solid var(--ink)}
+.eyebrow{font:500 12px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1{margin:0;font-size:clamp(34px,6vw,56px);line-height:1.05;font-weight:700;letter-spacing:-.03em;text-wrap:balance}
+.stamp{font:400 12px/1.6 var(--font-mono);color:var(--muted);text-align:right}
+.stamp b{color:var(--ink);font-weight:500}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.search{flex:1 1 260px;display:flex;align-items:center;background:var(--surface);border:1px solid var(--line);padding:0 12px;min-height:42px}
+.search input{flex:1;border:0;background:transparent;outline:0;min-width:0;padding:8px 0}
+.search:focus-within{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface);padding:6px 12px;cursor:pointer;font-weight:500;font-size:13.5px;display:inline-flex;gap:8px;align-items:baseline}
+.chip i{font:400 11.5px var(--font-mono);font-style:normal;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip[aria-pressed="true"] i{color:inherit;opacity:.7}
+.chk{display:inline-flex;gap:8px;align-items:center;font-size:13.5px;cursor:pointer;user-select:none}
+.chk input{width:16px;height:16px;accent-color:var(--accent);margin:0}
+.note{font-size:12.5px;color:var(--muted);margin:14px 0 0;max-width:72ch}
+.sec{display:flex;justify-content:space-between;align-items:baseline;margin:30px 0 4px}
+h2{margin:0;font-size:20px;font-weight:700;letter-spacing:-.01em}
+.count{font:400 12.5px var(--font-mono);color:var(--muted)}
+.day{display:grid;grid-template-columns:132px 1fr;gap:0 24px;padding-top:22px}
+.dayhead{position:sticky;top:calc(env(safe-area-inset-top,0px) + 132px);align-self:start;font:500 12.5px/1.4 var(--font-mono);color:var(--muted);letter-spacing:.04em}
+.dayhead b{display:block;font:700 26px/1.1 var(--font-body);color:var(--ink);letter-spacing:-.02em;margin-bottom:4px}
+.list{display:grid;gap:0;border-top:1px solid var(--ink)}
+.art{background:var(--surface);padding:18px 20px;border-bottom:1px solid var(--line);display:grid;gap:10px}
+.art.read .ttl{color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font:400 12px var(--font-mono);color:var(--muted)}
+.tag{font:600 12px var(--font-body);color:var(--tc);display:inline-flex;align-items:center;gap:6px}
+.tag::before{content:"";width:8px;height:8px;background:var(--tc)}
+.ttl{font-size:18px;line-height:1.4;font-weight:600;letter-spacing:-.01em;text-wrap:balance;margin:0}
+.ttl a{text-decoration:none}
+.ttl a:hover{text-decoration:underline;text-underline-offset:3px}
+.sum{margin:0;max-width:66ch}
+.cp{margin:0;max-width:66ch;display:flex;gap:10px;align-items:baseline;font-size:14px}
+.cp span{flex:none;background:var(--mark);color:var(--mark-ink);font:600 12px var(--font-body);padding:1px 8px}
+.cp p{margin:0}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:transparent;padding:4px 12px;font-size:13px;cursor:pointer}
+.btn:hover{border-color:var(--ink)}
+.btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.empty{padding:48px 0;color:var(--muted)}
+.t-law{--tc:var(--t-law)}.t-hire{--tc:var(--t-hire)}.t-pay{--tc:var(--t-pay)}.t-ai{--tc:var(--t-ai)}.t-ls{--tc:var(--t-ls)}
+.theme{border:1px solid var(--line);background:var(--surface);padding:6px 12px;cursor:pointer;font-size:13px;min-height:42px}
+@media (max-width:700px){
+  .day{grid-template-columns:1fr;gap:10px}
+  .dayhead{position:static;display:flex;gap:10px;align-items:baseline}
+  .dayhead b{font-size:22px;margin:0}
+  .art{padding:16px}
+  .stamp{text-align:left}
+}
+</style>
+<div class="wrap">
+  <header class="mast">
+    <div>
+      <p class="eyebrow">INVENI · HR Desk</p>
+      <h1>인사 뉴스룸</h1>
+    </div>
+    <div class="stamp">최근 7일 구글 뉴스 기준<br><b id="stamp"></b></div>
+  </header>
+
+  <div class="bar" role="search">
+    <div class="row">
+      <label class="search" for="q"><input id="q" type="search" placeholder="제목, 요약, 언론사 검색" autocomplete="off"></label>
+      <button class="theme" id="theme" type="button">화면 모드</button>
+    </div>
+    <div class="row">
+      <div class="chips" id="chips" role="group" aria-label="분야"></div>
+      <label class="chk" for="onlySaved"><input id="onlySaved" type="checkbox">저장한 기사만</label>
+      <label class="chk" for="hideRead"><input id="hideRead" type="checkbox">읽은 기사 숨기기</label>
+    </div>
+  </div>
+
+  <p class="note">기사 요약과 체크포인트는 기사 제목과 구글 뉴스 목록을 바탕으로 정리한 것이며, 원문 전체를 읽고 쓴 것이 아닙니다. 법령 시행일·수치는 원문과 고용노동부 공지로 한 번 더 확인하세요. 저장·읽음 표시는 이 브라우저에만 남습니다.</p>
+
+  <div class="sec"><h2 id="h2">전체 기사</h2><span class="count" id="cnt"></span></div>
+  <main id="feed"></main>
+</div>
+<script>
+const DATA=[{"id":"a21","topic":"임금·연금","title":"'2164억 체불' 대유위니아…3년 연속 퇴직연금 적립 미달","src":"뉴시스","link":"https://news.google.com/rss/articles/CBMiYEFVX3lxTE02MVpidWRlemVDb2RMMkEwd3c4RDJGa0JQLVc5MnhneTZjWmtET0dxa1hoQkVPTzh3cVpaNmRrUENHT1NLc1VLMUVIN2ZRd1lKZ1d5aFlGeDI2anVlRVZLZdIBeEFVX3lxTFBEM3lEdHVtbUlXLS03bVc0VUNMNjBCSXpIT3o3Z0h6OFVveE00bXBOek9lb3A2UTl1V09VME1KMkJpZ1JzTGo2VTJmUWlNZndUeTZZUmRGR3F6aXhoODdIbXFOZXFCYWoxbG41Y2lvY1BHNV9JM05QVQ?oc=5","date":"2026-10-10T02:02:15.000Z","sum":"2천억 원대 체불로 문제가 된 대유위니아가 3년 연속 퇴직연금 법정 적립금에 미달한 것으로 드러났다.","chk":"퇴직연금 적립 비율과 부담금 납입 기한을 정기적으로 점검하세요."},{"id":"a28","topic":"HR·AI","title":"\"저 친구 퇴사할거 같은데요\"…AI가 먼저 알려준다 [임다연의 요즘 CEO 경영법]","src":"한국경제","link":"https://news.google.com/rss/articles/CBMiWkFVX3lxTFA4ekNTdjNNdXFSSDlTV3kwR2Ixd09fZVY1eUlQdjJIMzdpWnJjWHpuQWxlWWFmOVlFUjJRS0NKLWNQcXRtTTZaUl9aN1k2YTFSZDUxSVh4Yll5Zw?oc=5","date":"2026-10-09T21:00:01.000Z","sum":"AI가 퇴사 가능성을 먼저 예측해 알려주는 사례를 소개한 CEO 경영법 기사다.","chk":"퇴사 예측 모형은 낙인과 차별 위험이 있으니 활용 범위를 제한하세요."},{"id":"a2","topic":"노동법","title":"임금체불 처벌, 8일부터 징역 5년·벌금 5000만원 이하로 강화","src":"비건뉴스","link":"https://news.google.com/rss/articles/CBMiZkFVX3lxTE5WcGxPbTJhWnBQWEh3TloyX3Roa184bW9DelZieWNLczFYOGdjdzFlWU9rajd4RklEWEt6R2dVYUFBYm5RcThyLUh2bmJMdk10dWdxZWpTcWVrOS0yZlVUU3NZaFlDQQ?oc=5","date":"2026-10-09T04:20:41.000Z","sum":"임금체불 처벌이 강화돼 8일부터 징역 5년 이하 또는 벌금 5천만 원 이하로 적용된다.","chk":"월급 지급일을 넘기는 사례가 없는지, 퇴직금·수당 정산 시점을 확인하세요."},{"id":"a13","topic":"채용","title":"기업 고용지원금 1조4686억…‘진짜 일자리 효과’ 검증은 3년째 멈춤","src":"당진시대","link":"https://news.google.com/rss/articles/CBMib0FVX3lxTE95cHBXYjhtejh4RVhIREhEUldVUF9KcWttaEh1SE12a2g2ZE40aWlSSVBCbG1xSmhQNmhFdWZHUTM2X043YnM2dUpGamxFdmtfT1hRaW1xTmlQRzRfeU5BbWxhMmNMejlXMWdHRXBOSdIBb0FVX3lxTE95cHBXYjhtejh4RVhIREhEUldVUF9KcWttaEh1SE12a2g2ZE40aWlSSVBCbG1xSmhQNmhFdWZHUTM2X043YnM2dUpGamxFdmtfT1hRaW1xTmlQRzRfeU5BbWxhMmNMejlXMWdHRXBOSQ?oc=5","date":"2026-10-09T04:16:19.000Z","sum":"기업 고용지원금에 1조 4,686억 원이 들어갔지만 실제 일자리 효과 검증은 3년째 멈춰 있다는 국감 지적이다.","chk":"고용지원금을 신청한 사업은 사후관리와 증빙 요건을 확인하세요."},{"id":"a8","topic":"채용","title":"대기업 채용시장 살아나나 … 3분기 반도체 채용공고 102% 급증","src":"워크투데이","link":"https://news.google.com/rss/articles/CBMibEFVX3lxTE1henZNTC1yMUZTci1VYU9qSEg5REp3a0I0alByVUV3TDBWdzNSMVp1eUc3SzN5ZUhFc3ZwS0hteEFUTEFISkprOEJrcGk2elZBRFY1c1A3ZlVManYyNkVaOFJ4SU5HWkRUaTFCUQ?oc=5","date":"2026-10-08T15:21:00.000Z","sum":"3분기 반도체 대기업 채용공고가 전년보다 102% 늘었고, 경력직 공고는 157% 증가했다. 잡코리아 분석이다.","chk":"반도체·전자 인력 경쟁이 심해지는 만큼 경력 채용 보상과 처우를 점검하세요."},{"id":"a23","topic":"임금·연금","title":"최저임금법 회피 의심 소정근로시간 단축합의 인정 대법원","src":"뉴스클레임","link":"https://news.google.com/rss/articles/CBMidEFVX3lxTE9GSTRSOUktUmlPaWdMNThRU3V0dTIzOGFmNi1nN2ljMHJWSEk1UkpmQkJJVE5JQjFIMVJOTEF3YXo1TlhFNHgzWDVTLVhaUU8zUHF0WDVMOWl6RVJjN1lhODk5d0lCTmducC1NZW42WnJzTVhR0gF0QVVfeXFMT0ZJNFI5SS1SaU9pZ0w1OFFTdXR1MjM4YWY2LWc3aWMwclZISTVSSmZCQklUTklCMUgxUk5MQXdhejVOWEU0eDNYNVMtWFpRTzNQcXRYNUw5aXpFUmM3WWE4OTl3SUJOZ25wLU1lbjZacnNNWFE?oc=5","date":"2026-10-08T11:19:24.000Z","sum":"소정근로시간을 줄이는 합의가 최저임금법 회피로 의심되는 경우에도 대법원이 그 합의를 인정했다는 보도다.","chk":"근로시간 단축 합의서의 동기와 실질을 문서로 남기세요."},{"id":"a9","topic":"채용","title":"청년 고용률 43.6%…정부, 일자리 대책 점검","src":"아시아투데이","link":"https://news.google.com/rss/articles/CBMibkFVX3lxTFBXcWJEVlFDVy1kTnZzRkVSSU03MW50bC0zOFkyYnNBS09PWUhab2FFYklKbXdqMmhFUUhZT3FSTnlock9lWTBYUjNYVExOYnpvaDNkVGlLbTlENVVrRVNDR2JqbGRLNXJIMDUwaERR?oc=5","date":"2026-10-08T07:00:47.000Z","sum":"청년 고용률이 43.6%로 집계돼 정부가 일자리 대책을 점검했다.","chk":"청년 채용 지원사업이 우리 채용 계획에 쓸 수 있는지 확인하세요."},{"id":"a35","topic":"INVENI·LS","title":"LS증권, 그룹 편입 후 첫 공모채 발행…최대 1400억 조달","src":"블로터","link":"https://news.google.com/rss/articles/CBMiaEFVX3lxTE9rbjdLcDczNnU1Q2lqZmNTM0RwanlGUDJNbjdubUZVTnozX2h3R0JpQVhqbVE3LVdGMW9xSk1zMFdWSGF1VHlSak4xRXJ0eldkbFhHT1owOU9TM0JBNVBXQWNHVEo3R3M20gFsQVVfeXFMTVVXbDR6aXhRTk9WeDNJYkRVNXpmOU1zazZZLUVoT2IwMnFfMWx4dV9yeXZjblBjQzJxX2hiajg3bTcyVm5FU0tCeDl2a2JHZzQxNlgyWGVCNk5saWxfOGI5WFk1alBqTDY4Qkow?oc=5","date":"2026-10-08T06:59:29.000Z","sum":"LS증권이 그룹 편입 후 첫 공모채를 발행해 최대 1,400억 원을 조달한다.","chk":"그룹 편입 후 인사·보상 체계 통합 일정과 함께 확인하세요."},{"id":"a27","topic":"HR·AI","title":"'AI가 근태 평가하고 해고까지'…美캘리포니아, 'AI 상사'에 제동 - 머니투데이","src":"머니투데이","link":"https://news.google.com/rss/articles/CBMibkFVX3lxTFA1SnhtRHluVzZfZDV5Zy1ydl9UZTkySTVnSUFOLUxTYTM2RV9kTjBad1Q5dmQ4YjRHbUFGSGVEZGNaLXZBeWVwX29kTEU4MDJlMEFOYzBGMEh0OVRRQ2o5bEc5MmFwZE1EdkZKeXRR0gFuQVVfeXFMUDVKeG1EeW5XNl9kNXlnLXJ2X1RlOTJJNWdJQU4tTFNhMzZFX2ROMFp3VDl2ZDhiNEdtQUZIZURkY1otdkF5ZXBfb2RMRTgwMmUwQU5jMEYwSHQ5VFFDajlsRzkyYXBkTUR2Rkp5dFE?oc=5","date":"2026-10-08T03:20:03.000Z","sum":"미국 캘리포니아가 AI가 근태를 평가하고 해고까지 이어지는 AI 상사에 제동을 걸었다. 직장 내 인사 결정에 AI를 쓰는 규제가 강화된다.","chk":"AI 평가·징계 보조 도구를 쓴다면 최종 판단을 사람이 하는 구조인지 점검하세요."},{"id":"a3","topic":"노동법","title":"학습지 교사 '근로자'로 첫 인정…중노위, 부당해고 판정","src":"이데일리","link":"https://news.google.com/rss/articles/CBMigAFBVV95cUxONnA4Znc3dWF5UGUwNHdEZGlTcVhOa1EzVGt1anNRdzBQYWM2NmdFY2FsNE43ZS10SFFMcXhIOHEwaGdyZEQtakk2NE5Eakd6MXhKd0lBWmhuQ0tLWWhhZ1Jjb1BQZll4aU4xc0duWENHSWRzVUl1SDBrMEZ1YnZoYg?oc=5","date":"2026-10-08T01:00:06.000Z","sum":"중앙노동위원회가 위탁계약 형태로 일한 학습지 상담교사를 근로자로 처음 인정했다. 계약서 이름보다 실제 종속 관계를 본 판단이다.","chk":"위탁·프리랜서 계약자의 업무 지시, 근무시간 통제 여부를 점검하세요."},{"id":"a17","topic":"임금·연금","title":"최저임금 결정 기초통계인데…영향근로자 수 조사 따라 최대 6.3배 차이","src":"조선일보","link":"https://news.google.com/rss/articles/CBMijgFBVV95cUxNQ2d4cS1BalJFNjRGLUVaUHJxeFREWkFnZkc2VHVkaUU1SENRdzBfT0VBRGIycWdNdmFXZ29lMTVHSUtBbEJqY0hUY2dPNjhKMTVxdVplMG5uRm1pNmRuUENmT0lmSmhDaFJJMzM5VGl1LWFQbnlCVTRsb1UxUi1rSllpUHkyTWI1X05Pb2xn?oc=5","date":"2026-10-07T22:20:55.000Z","sum":"최저임금 결정의 기초 통계인 영향 근로자 수가 조사 방식에 따라 최대 6.3배 차이 난다는 보도다. 47만 명과 290만 명 사이에서 크게 벌어진다.","chk":"최저임금 영향 규모를 인용할 때 어떤 조사 기준인지 확인하세요."},{"id":"a32","topic":"INVENI·LS","title":"LS, 자산 50조 질주···구자은이 그리는 'AI로 일하는 그룹'","src":"뉴스웨이","link":"https://news.google.com/rss/articles/CBMiakFVX3lxTE9WY09EOW9lRFlnTWF5QkxYd0E3MEVzdmh4RHMyd0s4WGxxdmJSWl9YSlBwbkxUU3k4NEs2clZ6MkQ1QzJaNkRaSHNkMjluazd3bmtGTnlCZkpEdk9rTldXS2NHVVRWVTVCTmc?oc=5","date":"2026-10-07T21:55:55.000Z","sum":"LS가 자산 50조 원을 넘어섰고, 구자은 회장은 AI로 일하는 그룹을 그리고 있다는 보도다.","chk":"그룹 차원의 AI 활용 방향이 인사·교육 제도에 미칠 영향을 지켜보세요."},{"id":"a19","topic":"임금·연금","title":"‘기금형 퇴직연금’ 정기국회 논의 본격화 할 듯","src":"매일노동뉴스","link":"https://news.google.com/rss/articles/CBMicEFVX3lxTE9WaW81ejRpOGJQRC1FMkQ2UFFvbDlNWGZZNWJUTkVVVHM2ZVYtOXl3NlN0XzY0dFJRTkNzTEZKZmxCNHhUSHM5bFBwRnJsRFBHOTRNaWhBYThZOFhtLXd3Ym5SbU84ZUV2UXlSQTVodS0?oc=5","date":"2026-10-07T21:30:05.000Z","sum":"기금형 퇴직연금 도입 법안이 발의되면서 정기국회에서 논의가 본격화될 전망이다. 국민연금공단 참여 여부와 운용 주체가 쟁점이다.","chk":"퇴직연금 제도 변경에 대비해 현재 DB·DC 구성과 운용사 계약을 정리해 두세요."},{"id":"a1","topic":"노동법","title":"'노란봉투법' 첫 국감…원청교섭 성적표, 근로감독관 수사권 쟁점 부상","src":"뉴스1","link":"https://news.google.com/rss/articles/CBMiY0FVX3lxTE9aN1dNUHNwVEtSUUlqLVpOVThRa1ZlRFpSUkh1aXJzSlByaVFoazVIQkFqdFQ1RGVZY0ZGOE5WcUZYWGh4X0dhNVFfaEtKSmRGNVdmMlk2TFRtZml6cGNKcmdVdw?oc=5","date":"2026-10-07T21:00:00.000Z","sum":"노란봉투법 시행 후 처음 열린 국정감사에서 원청 교섭 이행 현황과 근로감독관 수사권이 쟁점으로 올랐다.","chk":"원청 교섭 요구가 들어올 때의 대응 창구와 절차를 정해 두세요."},{"id":"a14","topic":"채용","title":"[이슈분석] 외국인력 늘려도 구인난 남는다…기업이 필요한 사람을 찾으려면","src":"아웃소싱타임스","link":"https://news.google.com/rss/articles/CBMickFVX3lxTFB2S01ZYUFTOV95d2dENGV2cWhYTDJwMU04SWpKbEowZ0NIRi01ck1RN3JJZUUtYW12cUFFZnRibDVNY3lwd01zMFU5RTF3SzI3bTNDWV9tUFV1WlZ3TEVzbHhXbC1qck5TdkxaRjZFMjg4UQ?oc=5","date":"2026-10-07T21:00:00.000Z","sum":"외국인력을 늘려도 구인난이 남는 이유와 기업이 필요한 대응을 분석했다.","chk":"외국인 근로자 채용 시 비자·숙련도·정착 지원 비용을 함께 계획하세요."},{"id":"a10","topic":"채용","title":"정년연장 딜레마… 중장년 명퇴 ‘칼바람’, 청년고용 ‘찬바람’ [심층기획-직무급 도입 지체의 그늘]","src":"세계일보","link":"https://news.google.com/rss/articles/CBMiWEFVX3lxTE1GdUh6bDBDZ2RYM1h6OTFrZkltcjBjTjBTREZDaHhZQTRETlJ5d1lPZXZmeHh0WlppbkVVcVN2YWZ2Z0NGaXg5RTZESWl2S2VzWkdHSmdoYVfSAVRBVV95cUxPWS1oYUJCNTRKWEEtY05xMTVsY3hscXhiSE1lSzlCcWFxTWtQcVB3dEM3UkllamRUOFVwTUZWR2hsOGhwVFQxT2RydjNHR3RVVlhWYTU?oc=5","date":"2026-10-07T11:00:00.000Z","sum":"정년연장 논의 속에서 중장년 명예퇴직은 늘고 청년 고용은 얼어붙는 상황을 짚었다.","chk":"정년·임금체계 개편과 신규 채용 규모를 함께 시뮬레이션해 보세요."},{"id":"a18","topic":"임금·연금","title":"부산시 내년 생활임금 확정, 시간당 1만2729원…3.7%↑","src":"국제신문","link":"https://news.google.com/rss/articles/CBMijgFBVV95cUxPVHYxS05STGhaUmdLd1RlUEJpWURzNDBWRzEwWlVYX2lxVTRUT1F1cGxwbHlzUEFuaE9TNmFncjJCdU5HV09oa2FnRHhpWmVfZjZrcHM3blZ2Y2dFUHh1WDFMWWRNX3lMalZweDNQc0JjbzcyMnNRVFFYbmVyeDFfMG9sclp1UGxwZDFQSEFB?oc=5","date":"2026-10-07T10:14:00.000Z","sum":"부산시가 내년 생활임금을 시간당 1만 2,729원으로 확정했다. 올해보다 3.7% 오르며 최저임금보다 2,029원 높다. 노동계는 제도 취지를 살리지 못했다며 반발했다.","chk":"생활임금 적용 대상 용역·위탁 계약의 단가 반영 시점을 확인하세요."},{"id":"a29","topic":"HR·AI","title":"\"AI로 딸깍 만든 영상, 임직원 교육엔 못 쓴다\"…HR 현장서 터져 나온 이유","src":"뉴시스","link":"https://news.google.com/rss/articles/CBMiYEFVX3lxTE1rbnhNSV9RM1hhMndDTjJMNmtGeUw4c0lIeDEzQVk5S3g0S1FHWTZ0NEJFT1Y1azBIYXdTSGNRd0RNQzBBLTJoTS1tcFN1YzhvV2U4OWNqM2REQlMweUFratIBeEFVX3lxTE5hSGRTYkdKZ1JONUh3aF9kMnQzR2FRYlJvRGdDNUhobnlFa2dtR1pTTklxb0l1S2EtZFVfZVlSRmdFNlhMOEk3SUhUWXZ2RFZDWDU2RWh6V1VPOWtNRElUV2ItbnJqTURkOTlWRUR0ODhhcXRKZUlWOQ?oc=5","date":"2026-10-07T10:00:36.000Z","sum":"AI로 쉽게 만든 영상은 임직원 교육에 쓰기 어렵다는 HR 현장의 목소리를 전한 기사다.","chk":"교육 콘텐츠에 AI를 쓸 때 품질·저작권 기준을 정해 두세요."},{"id":"a16","topic":"임금·연금","title":"이소영 장관 \"최저임금 업종별 차등 적용, 고민 필요\"","src":"YTN","link":"https://news.google.com/rss/articles/CBMiXkFVX3lxTE1HQm5lUEw3YkxHcTIzN0NDa0VldEhtQ0Y3eVJYQ3A2WkRvM3JSS0RTeFBSeUNTTW9WY002QlN0T0FHeEZfYW1mMGQyTktjeEJoLWh5blRaa0xaMGhvMWc?oc=5","date":"2026-10-07T09:24:00.000Z","sum":"이소영 중기부 장관이 국정감사에서 최저임금 업종별 차등 적용에 대해 고민이 필요하다고 말했다. 혁신당은 시대 역행이라며 반발했다.","chk":"내년 최저임금 논의에서 차등 적용이 다시 의제가 될 수 있습니다. 인건비 시나리오를 준비하세요."},{"id":"a0","topic":"노동법","title":"노동부, 안산 산단 136명 불법 파견 적발···직접 고용 조치","src":"참여와혁신","link":"https://news.google.com/rss/articles/CBMibkFVX3lxTE5Oc3ZDbXk4UlVFUXktREQtZEtlX3I3RDdOQUU0N2V2UHVSc21pRVNJRXctN056TG1ScjBlbzBiLXBsV1dBQjlvMk5XNE95bE9LOHJiRXlQQW1jc015aGFxRDYzZ2UzWXhBSU5vbTV3?oc=5","date":"2026-10-07T09:00:12.000Z","sum":"고용노동부가 안산 산단 제조업체 19곳을 감독해 18곳의 위반을 적발했다. 인력공급업체 10곳이 제조업체 8곳에 근로자 136명을 불법 파견한 것으로 확인되어 직접고용 시정이 내려졌다.","chk":"제조 현장에서 도급·파견을 쓰고 있다면 업무 지시 방식과 허가 여부부터 점검하세요."},{"id":"a25","topic":"HR·AI","title":"워크데이 \"한국서 AI 검토 넘어 실행…성장 본격화\"","src":"이데일리","link":"https://news.google.com/rss/articles/CBMigAFBVV95cUxPeW0yNjhwOGMtNHk5MnZYUjdNdGJhdWdPZ3A2VXFLbm9wQy1TaTY5R1NqWnNrN25Fc3otVk1Kc3NsN29fNGJRc1VSZGxSUTRRYjMzN3hiMUhwRDdtM2MzMDlmRDQxRGZSNk9tWXNQVE9sV01mSC16R3dWeFVwU3pKMw?oc=5","date":"2026-10-07T07:40:54.000Z","sum":"워크데이가 한국에서 AI 검토 단계를 넘어 실행 단계로 넘어가겠다며 AI 에이전트 전략을 발표했다.","chk":"HR 시스템 업체의 AI 기능이 개인정보 처리 기준에 맞는지 확인하세요."},{"id":"a33","topic":"INVENI·LS","title":"LS일렉트릭, 대만 포모사플라스틱그룹과 합작법인 설립","src":"연합뉴스","link":"https://news.google.com/rss/articles/CBMiYEFVX3lxTE1JR1cyQVZXVTdMNmt5SjBqSHlBaGhmdzMzN0NacS04UEd3eUdITDBTY1dCSEtDdGJuUmFVUndtdjFBOUZwaUtnSDNEa0g0MjZzWUNYUy1CbGJuanllajBjZNIBYEFVX3lxTE1JR1cyQVZXVTdMNmt5SjBqSHlBaGhmdzMzN0NacS04UEd3eUdITDBTY1dCSEtDdGJuUmFVUndtdjFBOUZwaUtnSDNEa0g0MjZzWUNYUy1CbGJuanllajBjZA?oc=5","date":"2026-10-07T06:20:47.000Z","sum":"LS일렉트릭이 대만 포모사플라스틱그룹과 전력 인프라 합작법인을 세워 현지 수주 사업을 키운다.","chk":"해외 합작 사업의 파견·현지 채용 수요를 인력 계획에 반영하세요."},{"id":"a26","topic":"HR·AI","title":"삼성전자, AI로 임직원 역량 분석…AI 커리어 플랫폼 ‘마이 스킬스’ 오픈","src":"뉴스토마토","link":"https://news.google.com/rss/articles/CBMiYEFVX3lxTE1FOXk4d3lRYmVWSW5FSWpsZWZadFh4bFZEempOSTJRSTdRVm11cGpqcExvdXJia3VRQlR1aWp4WEZJcGRXbDNCaUpMN3hlQm12U2JoRW9zMEE4dFo5QlY2Mw?oc=5","date":"2026-10-07T06:12:25.000Z","sum":"삼성전자가 AI로 임직원 역량을 분석하는 AI 커리어 플랫폼 마이 스킬스를 열었다.","chk":"직원 역량 데이터를 쓸 때 수집 범위와 동의 절차를 명확히 하세요."},{"id":"a24","topic":"HR·AI","title":"HR 전용 AI 에이전트 나온다… HCG, 28일 ‘그라운드 원’서 ‘일라이자엑스’ 공개","src":"동아일보","link":"https://news.google.com/rss/articles/CBMidkFVX3lxTE9wUzByWldqSHhQd25BeFUzd0dBRkZublhUVDM3ME1abXF2UjNWdkxaOXMzOGNsWlJUcmFNWjZXOWdYRHFaWVM1WkpWSXVTZi1Kb19QRmRnUkloTGQ3UzE2SjNPVm1GSm9mbEEwcHdiNWRVLThwZVHSAWZBVV95cUxPY05hU29Kem1oSkNmTWt4OGg4S2VSbjFES3pBa3hXSEk2bHZ3akp3MVdwTHRZbG1nSlVENGV3MWxpbnI5a3JOc2N0eW5rb2lTRUJwVTM3ODB4VGhqSlYtZjFYYzBrN0E?oc=5","date":"2026-10-07T05:40:00.000Z","sum":"휴먼컨설팅그룹이 28일 HR AI 컨퍼런스 그라운드 원에서 HR 전용 AI 에이전트 일라이자엑스를 공개한다.","chk":"HR 업무에 AI 에이전트를 붙일 때 데이터 접근 권한과 책임 소재를 먼저 정하세요."},{"id":"a15","topic":"채용","title":"중장년 취업에도 AI 바람…인천 고용기관·폴리텍 손잡았다","src":"경기신문","link":"https://news.google.com/rss/articles/CBMiZEFVX3lxTE9HUHRMcXhxQ2FjNy1EN3RpbnNPcnRNYWdUaWlTNmFvMTFoZ2JjN3pCT1p1TWVoUjV5TE9VVzFyZUhEVk44dE9xSTFIOEFNNEdBUkFNMmt5WVZKT2IxVlJncDM0VDM?oc=5","date":"2026-10-07T04:57:14.000Z","sum":"인천 고용기관과 폴리텍이 손잡고 AI를 활용한 중장년 취업 지원에 나선다.","chk":"중장년 경력 채용 채널로 활용할 수 있는지 살펴보세요."},{"id":"a31","topic":"HR·AI","title":"이즈파크, Sgate 연내 도입 프로모션…AI로 KPI·OKR부터 인사평가까지 지원","src":"전자신문","link":"https://news.google.com/rss/articles/CBMiTkFVX3lxTE9wYmxncDF6MFRPUXR4MVVBdnFjdXlGV2pwRFUzMkVSYm8tMDRrSkNuMTd6ejBhbDVmY05zUGhLTE1tUzM1d3R3R2hLREpjUQ?oc=5","date":"2026-10-07T04:07:46.000Z","sum":"이즈파크가 AI로 KPI·OKR 설정부터 인사평가까지 지원하는 Sgate 연내 도입 프로모션을 시작했다.","chk":"평가 자동화 도구는 평가 기준의 공정성 설명 가능성을 확인하세요."},{"id":"a34","topic":"INVENI·LS","title":"LS에코에너지, 베트남 버스덕트 생산능력 2배 늘린다","src":"서울경제","link":"https://news.google.com/rss/articles/CBMiUkFVX3lxTE5pM1VBcjA3eGx2R01qM2tDbEVDSlF2MGhKWHh0Ulc0N3pKUXpwNFI0eHZEYkhWRHlLVmwzZjBOSzVLVVFpSE5SQ08ydm93aFJVakHSAVNBVV95cUxPbms1R1p0UXVPb0hNM29iTHJjcm5ud3ZESVYzekVJVFdzc3p0MkxHX09icU1IMzcyVjV6Szk3UVNxa3M1SnQ1RHN0dDlYNTRMcmNLVQ?oc=5","date":"2026-10-07T00:56:28.000Z","sum":"LS에코에너지가 베트남에서 AI 데이터센터용 버스덕트 생산능력을 두 배로 늘린다.","chk":"베트남 증설에 따른 현지 인력과 안전보건 관리 이슈를 살피세요."},{"id":"a36","topic":"INVENI·LS","title":"LS, 부패방지-규범준수 국제표준 통합 인증 획득...美 데이터센터에 초고압 변압기 공급","src":"여성소비자신문","link":"https://news.google.com/rss/articles/CBMiZkFVX3lxTE9lZkctQWhnTGNvLVJuSEQ3S0FZYVFmZ2VzUGFUMVIyQU0yYW5fYXhPTm5CY1JGSmlybjdsM2tlSjlhOTU4OXE4c1JrdWFPcklmcXdKYjMwZHlYdnE1VW5VUkI5SVUwdw?oc=5","date":"2026-10-06T23:23:10.000Z","sum":"LS가 부패방지와 규범준수 국제표준 통합 인증을 획득했다.","chk":"컴플라이언스 교육과 신고 채널 운영 현황을 인증 기준에 맞춰 점검하세요."},{"id":"a12","topic":"채용","title":"AI가 신입의 일을 가져간 자리, 대학은 무엇을 가르쳐야 하나","src":"스포트라이트유","link":"https://news.google.com/rss/articles/CBMizgJBVV95cUxQQ0ZyRW9tbmlIMGNqMllfNUlCSVRuZHloaXlrby1NT24tNldyanV4Si1uckZtMDNSRFp5M1JER05Dbl85b1BYYlFDeVo0c1c3djJiVUw5SjFmdUI0SVdFaWNTWXM0VE5ubHdMcUdDcGV3THVvaTRHYWROTVItTUQzaEFYT1djX2RxOWJQSVVIVk0yNEhVTldqS0NkMk5hNHg5MmZLY3cxNGVuWjFGaHpfei1TRTdMcE9WRUJqVl9rcU90S19JZDNkVVdOVTlaMzl1VjRYMV8zakowdHh4cmtNeEl5NDlVVHBtUXJHM3h2THRObGJqSVF2dEM2eDBzNGVybEZ6Q0hqUGhvb3JZWlJkTG9TMVhJZGg0SGZNRlZLTWJVdEdvd1hyQTRPN3lGQURGZnlMMFNaeFhMbDIzdUhMenFNZmdNUGxFandNZGNR?oc=5","date":"2026-10-06T08:25:52.000Z","sum":"AI가 신입이 하던 업무를 대신하는 흐름 속에서 대학과 기업이 무엇을 가르치고 뽑아야 하는지 다룬 글이다.","chk":"신입 직무 정의와 온보딩 과제를 AI 활용 전제로 다시 설계해 보세요."},{"id":"a22","topic":"임금·연금","title":"대지급금 부정수급 신고포상금 상한액 1억→2억원 상향","src":"연합뉴스","link":"https://news.google.com/rss/articles/CBMiW0FVX3lxTE9rdGIyZDUxSkFYbS1aX3hrWFg1YTZhQkpjaDdWcWpZNmQtZTZHUGFjdEpBM3dFUklRWk5kbjF1Rkw0NC0wWkRSQkxDQXRmZDcwLWx6ZE9fUWE1NGPSAWBBVV95cUxOTFB4dUdoSFZyaTBkU1l4MEdsNTFJVVAwNEd6R3RLYkI0VWhWQjc4ZnhiYVZVVktMc19ncHpzR3hpamlrWTJlc2gzNGoxRFBwUWlFeG5peU5rVEJ1VzdDSDU?oc=5","date":"2026-10-06T04:07:08.000Z","sum":"체불임금 대지급금 부정수급 신고 포상금 상한이 1억 원에서 2억 원으로 오른다. 내년부터 시행된다.","chk":"대지급금 제도를 악용하는 사례가 없도록 체불 관련 내부 기준을 정비하세요."},{"id":"a4","topic":"노동법","title":"내년 시행 ‘반차 의무화’…실무 혼선 줄이려면 이렇게","src":"월간노동법률","link":"https://news.google.com/rss/articles/CBMiiwFBVV95cUxPVU5DWTlqbEJyS1hPdDRjSG02VzhoQ19JQzBqaEZReFZ6SFBqM2hNYmxVbWhsc2YwVmlTZS1zbFNzci1oOFNQMTdvZkdsU0RBUW43UGxGdzZSQUczMEUtbTVzUVFfeGtJQlFNTHN2U2M1dHE0ZUMtUHJOdUlwLWd3RFNIaUtqSWlXNF84?oc=5","date":"2026-10-05T22:00:00.000Z","sum":"내년 시행 예정인 반차 의무화를 앞두고 실무 혼선을 줄이는 방법을 다룬 기사다.","chk":"취업규칙의 휴가 규정과 근태 시스템을 시행 전에 정비할 일정을 잡으세요."},{"id":"a30","topic":"HR·AI","title":"저숙련 노동자ㆍ신입사원, AI로 대체 전망 [AI 新계급 사회]","src":"이투데이","link":"https://news.google.com/rss/articles/CBMiVEFVX3lxTE8zOVlwUktmQ0RRekRFOFVkV3lmTDRUNmZlZFBwRnlyRVduZ1dzem56RmM3Snk3YUNlMWljLWl6ZlRLeHFYQURhMERDakVjWEFaSzF2Sg?oc=5","date":"2026-10-05T20:00:00.000Z","sum":"저숙련 노동자와 신입사원이 AI로 대체될 전망을 다룬 연재 기사다.","chk":"직무 재설계와 재교육 계획을 AI 도입 일정과 함께 세우세요."},{"id":"a7","topic":"노동법","title":"근로감독 방문 전 인사 담당자가 확인해야 할 것","src":"여행신문","link":"https://news.google.com/rss/articles/CBMickFVX3lxTE1CdVEtX29weHFhaFFQWUNpVXhuTDJIM3BBNXpHbFNfUjZUSHRXNzNxWkVwX1M5UWdjazd1SXNfTDR4c081RmtteHZXbUV5SkRFbG9QQzhYRFBiRG9tQXRMdkVLdGs0dmFqUEtMTHhoQWZTZw?oc=5","date":"2026-10-05T15:05:00.000Z","sum":"근로감독이 나오기 전에 인사 담당자가 미리 확인해야 할 항목을 정리한 기사다.","chk":"근로계약서, 임금대장, 근로시간 기록을 감독 기준에 맞춰 사전 점검하세요."},{"id":"a11","topic":"채용","title":"커지는 AI 일자리 성별 격차…女 신규 채용 25% 그쳐","src":"이데일리","link":"https://news.google.com/rss/articles/CBMigAFBVV95cUxOUVR2UjBxVF91aXJ6RXY2VWowd3JQUXYyWFZLdjB4a25JYzAwMnZhbE9BeDlyb013US1qY3hkdktjT2V5SFRhdWtvYUlhMzhUbkxaYjhzb2xEMURBWE5sMjJHdTc3blRNUzVYNlFocWxXZDlpdDlSNG90TXdnTXdscg?oc=5","date":"2026-10-05T03:17:15.000Z","sum":"AI 관련 직무 신규 채용에서 여성 비중이 25%에 그친다는 조사 결과가 나왔다.","chk":"AI 직무 채용 풀의 성별 구성과 채용 단계별 이탈을 점검하세요."},{"id":"a5","topic":"노동법","title":"정부, 5인 미만 근로기준법 전면 확대 밀어붙이지만∙∙∙1,095조 원 자영업 대출 터뜨릴 뇌관 되나","src":"한국신용신문","link":"https://news.google.com/rss/articles/CBMia0FVX3lxTE9GLWhfa3dhTFU5WDhvNEFlUWdZQlhteGdCaFl3YkxGV29NbG5ycW9BVTJ1WW04WGtzbDhJQ0NZaDJRa3Nod0FZazlwLXYzRDh6SmlEOV9oU1dYaDdiLUYzMW92LUtVai1Uc3Vn?oc=5","date":"2026-10-05T01:05:00.000Z","sum":"정부가 5인 미만 사업장에 근로기준법 전면 확대를 추진하는 가운데, 자영업 대출 부담이 터질 수 있다는 우려를 짚은 기사다.","chk":"소규모 계열·협력사의 적용 범위 변화를 모니터링하세요."},{"id":"a20","topic":"임금·연금","title":"불장 보고 퇴직연금 DC로 갈아탔더니…두달 만에 -10%","src":"이데일리","link":"https://news.google.com/rss/articles/CBMigAFBVV95cUxQNmpqRG1PTHh0RnZlMlZHVmRDUDduczhOOFBaTEhGNGtnZ3NTUzhiY1kyTG54SXdWN2kxNXd4eFdMZHpPVXM2aXRGZ0RxbmVnOExSbXg2b09vaFhSMnYzTlhKWTlYUWpKZmFrTkszSHNwWGthYUYtQ2ZIazVUbTNUUA?oc=5","date":"2026-10-05T00:53:26.000Z","sum":"증시 활황 때 퇴직연금을 DC형으로 갈아탄 직장인들이 두 달 만에 약 10% 손실을 본 사례가 이어지고 있다.","chk":"DB→DC 전환 안내 시 투자 위험과 디폴트옵션 설명을 충분히 제공했는지 확인하세요."},{"id":"a6","topic":"노동법","title":"'일기본법' 연내 입법 추진…\"강행규정·구제절차도 설계해야\"","src":"뉴시스","link":"https://news.google.com/rss/articles/CBMiYEFVX3lxTFBrZ2p3S0UyVEoxM2RDQTNqanB6Y2tsWHdWM0JmS04zZ3FWTTJJejFvVTE4bE54RDR0aVdja09kcmwwR21FZEFnVzIybS1WLS1yVWdUS21fZC1Yam5BanhOWNIBeEFVX3lxTE5rUzRXRVl3bHExTGthbmxsSndHbEM3MU92RENjRkt1dXljdjJsMjN3MDliWC1Tc2wwZDNIYXBqejFsb01POUFQVC1kVHBXOTZVWXJkbGlXbVVjM0s4ZGRIaUJoUmRuNmNtR0pVUGttMzc5QjhYVFZ2eQ?oc=5","date":"2026-10-04T23:01:00.000Z","sum":"정부가 플랫폼·특고 노동자를 보호하는 일하는 사람 기본법(일기본법)을 연내 입법하겠다고 밝혔다. 강행규정과 구제 절차 설계가 관건이다.","chk":"플랫폼·특고 계약을 쓰는 부서가 있다면 입법 동향을 공유하세요."}];
+const TOPICS=[["노동법","노동법·근로감독","t-law"],["채용","채용","t-hire"],["임금·연금","임금·연금","t-pay"],["HR·AI","HR·AI","t-ai"],["INVENI·LS","INVENI·LS그룹 소식","t-ls"]];
+const cls=Object.fromEntries(TOPICS.map(t=>[t[0],t[2]])),lab=Object.fromEntries(TOPICS.map(t=>[t[0],t[1]]));
+const $=id=>document.getElementById(id);
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let saved=new Set(store.get("inveni.saved",[])),read=new Set(store.get("inveni.read",[]));
+let topic="전체";
+const fmt=(d,o)=>new Intl.DateTimeFormat("ko-KR",Object.assign({timeZone:"Asia/Seoul"},o)).format(d);
+const key=d=>new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Seoul"}).format(d);
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+$("stamp").textContent="기사 "+DATA.length+"건 · 2026.10.10 수집";
+function chips(){
+  const c=n=>n==="전체"?DATA.length:DATA.filter(a=>a.topic===n).length;
+  $("chips").innerHTML=[["전체","전체"],...TOPICS].map(t=>`<button type="button" class="chip" data-t="${t[0]}" aria-pressed="${topic===t[0]}">${t[1]}<i>${c(t[0])}</i></button>`).join("");
+}
+function render(){
+  const q=$("q").value.trim().toLowerCase(),os=$("onlySaved").checked,hr=$("hideRead").checked;
+  const list=DATA.filter(a=>(topic==="전체"||a.topic===topic)&&(!os||saved.has(a.id))&&(!hr||!read.has(a.id))&&(!q||(a.title+a.sum+a.chk+a.src).toLowerCase().includes(q)));
+  $("h2").textContent=topic==="전체"?"전체 기사":lab[topic];
+  $("cnt").textContent=list.length+"건";
+  if(!list.length){$("feed").innerHTML='<p class="empty">조건에 맞는 기사가 없습니다. 검색어나 필터를 바꿔 보세요.</p>';return}
+  const g={};list.forEach(a=>(g[key(new Date(a.date))]??=[]).push(a));
+  $("feed").innerHTML=Object.keys(g).sort().reverse().map(k=>{
+    const d=new Date(g[k][0].date);
+    return `<section class="day"><div class="dayhead"><b>${fmt(d,{month:"long",day:"numeric"})}</b><span>${fmt(d,{weekday:"long"})} · ${g[k].length}건</span></div><div class="list">`+
+    g[k].map(a=>`<article class="art ${read.has(a.id)?"read":""}" data-id="${a.id}">
+      <div class="meta"><span class="tag ${cls[a.topic]}">${lab[a.topic]}</span><span>${esc(a.src)}</span><span>${fmt(new Date(a.date),{hour:"2-digit",minute:"2-digit",hour12:false})}</span></div>
+      <h3 class="ttl"><a href="${esc(a.link)}" target="_blank" rel="noopener noreferrer" data-open>${esc(a.title)}</a></h3>
+      <p class="sum">${esc(a.sum)}</p>
+      <div class="cp"><span>체크포인트</span><p>${esc(a.chk)}</p></div>
+      <div class="acts"><button class="btn" type="button" data-save aria-pressed="${saved.has(a.id)}">${saved.has(a.id)?"저장됨":"저장"}</button><button class="btn" type="button" data-read aria-pressed="${read.has(a.id)}">${read.has(a.id)?"읽음":"읽음 표시"}</button></div>
+    </article>`).join("")+`</div></section>`}).join("");
+}
+$("chips").addEventListener("click",e=>{const b=e.target.closest("[data-t]");if(!b)return;topic=b.dataset.t;chips();render()});
+$("feed").addEventListener("click",e=>{
+  const art=e.target.closest(".art");if(!art)return;const id=art.dataset.id;
+  if(e.target.closest("[data-save]")){saved.has(id)?saved.delete(id):saved.add(id);store.set("inveni.saved",[...saved]);render()}
+  else if(e.target.closest("[data-read]")){read.has(id)?read.delete(id):read.add(id);store.set("inveni.read",[...read]);render()}
+  else if(e.target.closest("[data-open]")){read.add(id);store.set("inveni.read",[...read]);art.classList.add("read")}
+});
+["q","onlySaved","hideRead"].forEach(id=>$(id).addEventListener("input",render));
+$("theme").addEventListener("click",()=>{
+  const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
+  r.dataset.theme=dark?"light":"dark"});
+chips();render();
+</script>
